@@ -1,0 +1,1344 @@
+#+title: Emacs configuration
+#+PROPERTY: header-args:emacs-lisp :tangle ~/.emacs.d/init.el :mkdirp yes
+
+
+* Basic UI Configuration
+
+#+begin_src emacs-lisp
+
+  ;; You will most likely need to adjust this font size for your system!
+  (defvar efs/default-font-size 200)
+  (defvar efs/default-variable-font-size 250)
+
+  (setq inhibit-startup-message t)
+
+  (scroll-bar-mode -1) ;disable visible scrollbar
+  (tool-bar-mode -1)   ;disable toolbar
+  (tooltip-mode -1)    ;disable tooltips
+  (set-fringe-mode 10) ;give some breathing room
+
+  (menu-bar-mode -1)   ;disable the munu bar
+
+  ;; set up the visible bell
+  (setq visible-bell t)
+
+  ;; display line numbers
+  (column-number-mode)
+  (global-display-line-numbers-mode t)
+
+  ;; Disable line numbers for some modes
+  (dolist (mode '(org-mode-hook
+                term-mode-hook
+                shell-mode-hook
+                vterm-mode-hook
+                treemacs-mode-hook
+                eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+  ;; parenthesis completion
+  (electric-pair-mode 1)
+
+#+end_src
+
+** Font configuration
+
+#+begin_src emacs-lisp
+
+    ;; Font Configuration ------------------------------------------------------
+
+    (set-face-attribute 'default nil :font "Fira Code Retina" :height efs/default-font-size)
+
+    ;; Set the fixed pitch face
+    (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height efs/default-font-size)
+    ;;Cantarell
+    ;; Set the variable pitch face
+    (set-face-attribute 'variable-pitch nil :font "LXGW WenKai" :height efs/default-variable-font-size :weight 'regular)
+  ;  (set-fontset-font t 'unicode "all-the-icons" nil 'prepend)
+    (setq all-the-icons-dired-monochrome nil)  ;; 关闭单色图标模式,在文件系统中看起来更好
+    ;;在eshell中使用MesloLGS Nerd Font(powerline theme)
+  ;  (add-hook 'eshell-mode-hook
+  ;          (lambda ()
+  ;            (set-face-attribute 'default nil :font "MesloLGS Nerd Font")))
+
+
+    ;; 中文字体设置
+    ;(dolist (charset '(kana han symbol cjk-misc bopomofo))
+    ;  (set-fontset-font (frame-parameter nil 'font)
+;			charset
+;			(font-spec :family "Microsoft YaHei UI" :size 25)))
+
+    ;;; orgmode font, lots of error, decided not to use it 
+    ;; Set the fixed pitch face
+    ;(set-face-attribute 'fixed-pitch nil :font "mono" :height 150)
+
+    ;; Set the variable pitch face
+    ;(set-face-attribute 'variable-pitch nil :font "mono" :height 180 :weight 'regular)
+
+    ;; to check if some font match, use following code
+
+    ;(dolist (font (font-family-list))
+    ;  (when (string-match "sans" font)
+    ;    (message "Found font: %s" font)))
+
+#+end_src
+
+
+** safe theme
+
+if failed to load doom-theme, use this theme instead
+
+#+begin_src emacs-lisp
+
+  (load-theme 'wombat)
+
+#+end_src
+
+* Package Loading Configuration
+
+#+begin_src emacs-lisp
+
+  ;; package loading configuration
+
+  ;; initialize package
+  (require 'package)
+
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                           ("org" . "https://orgmode.org/elpa/")
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
+
+  (package-initialize)
+  (unless package-archive-contents
+    (package-refresh-contents))
+
+  (unless (package-installed-p 'use-package)
+    (package-install 'use-package))
+
+  (require 'use-package)
+  (setq use-package-always-ensure t)
+
+  ;; disable verify signiture
+  ;; because gpg can't work
+  (setq package-check-signature nil)
+
+#+end_src
+
+* UI Configuration
+
+** ivy & counsel
+
+#+begin_src emacs-lisp
+
+  ;; show the options while hit C-x ...
+  (use-package ivy
+    :diminish
+    :bind (("C-s" . swiper)
+           :map ivy-minibuffer-map
+           ("TAB" . ivy-alt-done
+           ("C-l" . ivy-alt-done)
+           ("C-j" . ivy-next-line)
+           ("C-k" . ivy-previous-line)
+           :map ivy-switch-buffer-map
+           ("C-k" . ivy-previous-line)
+           ("C-l" . ivy-done)
+           ("C-d" . ivy-switch-buffer-kill)
+           :map ivy-reverse-i-search-map
+           ("C-k" . ivy-previous-line)
+           ("C-d" . ivy-reverse-i-search-kill))
+    :config
+    (ivy-mode 1))
+
+  (use-package counsel
+      :config
+      (counsel-mode 1))
+
+#+end_src
+
+** Ivy-rich
+
+provide more doc and information after a command
+
+#+begin_src emacs-lisp
+
+  ;; provide more doc after command
+  (use-package ivy-rich
+    :init
+    (ivy-rich-mode 1))
+
+#+end_src
+
+** Icons
+
+#+begin_src emacs-lisp
+
+  ;;icon
+  ;; NOTE: The first time you load your configuration on a new machine, you'll
+  ;; need to run the following command interactively so that mode line icons
+  ;; display correctly:
+  ;;
+  ;; M-x all-the-icons-install-fonts
+  ;; M-x nerd-icons-install-fonts
+
+  (use-package all-the-icons
+    :if (display-graphic-p))
+
+#+end_src
+
+** doom-theme
+
+#+begin_src emacs-lisp
+
+  ;;theme
+  (use-package doom-themes
+    :init (load-theme 'doom-moonlight t))
+
+#+end_src
+
+
+** transparency
+
+#+begin_src emacs-lisp
+ ;; Set transparency of emacs
+ (defun transparency (value)
+   "Sets the transparency of the frame window. 0=transparent/100=opaque"
+   (interactive "nTransparency Value 0 - 100 opaque:")
+   (set-frame-parameter (selected-frame) 'alpha value))
+
+#+end_src
+
+** doom-modeline
+
+#+begin_src emacs-lisp
+
+  ;;doom-modeline
+  (use-package doom-modeline
+    :init (doom-modeline-mode 1)
+    :custom ((doom-modeline-height 15)))
+
+#+end_src
+
+** which key
+
+prompt some information while hiting C-h
+
+#+begin_src emacs-lisp
+
+  ;; which key
+  (use-package which-key
+    :init (which-key-mode)
+    :diminish which-key-mode
+    :config
+    (setq which-key-idle-delay 1))
+
+#+end_src
+
+** helpful
+
+A helpful help page, add source code and command in it
+
+#+begin_src emacs-lisp
+
+  ;; make help more helpful, add source code and some command in
+  ;; help doc
+  (use-package helpful
+    :custom
+    (counsel-describe-function-function #'helpful-callable)
+    (counsel-describe-variable-function #'helpful-variable)
+    :bind
+    ([remap describe-function] . counsel-describe-function)
+    ([remap describe-command] . helpful-command)
+    ([remap describe-variable] . counsel-describe-variable)
+    ([remap describe-key] . helpful-key))
+
+#+end_src
+
+* Key Bindings
+
+** general
+
+easier way to config keybindings
+
+In evil mode, press <SPC>, other mode, hit M-m
+
+then t for toggle (aka. change), tt: choose theme
+
+#+begin_src emacs-lisp
+
+  ;; config keybindings more convenient
+  (use-package general
+    :config
+    ;; rune/leader-keys is a variable (user difined var)
+    (general-create-definer rune/leader-keys
+      :keymaps '(normal insert visual emacs)
+      :prefix "SPC"
+      :global-prefix "C-SPC")
+  ;; t for toggle (change)
+    (rune/leader-keys
+      "t"  '(:ignore t :which-key "toggles")
+      "tt" '(counsel-load-theme :which-key "choose theme")))
+
+#+end_src
+
+** hydra
+
+A way to bind key quickly, here is an example of binding text scaling
+
+Notice that rune/leader-keys is the function we defined in general package
+
+#+begin_src emacs-lisp
+
+  (use-package hydra)
+
+  (defhydra hydra-text-scale (:timeout 4)
+    "scale text"
+    ("j" text-scale-increase "in")
+    ("k" text-scale-decrease "out")
+    ("f" nil "finished" :exit t))
+
+  (rune/leader-keys
+    "ts" '(hydra-text-scale/body :which-key "scale text"))
+
+#+end_src
+
+** evil!
+
+vim in emacs
+
+#+begin_src emacs-lisp
+
+  ;; evil
+  (use-package evil
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-i-jump nil)
+    :config
+    (evil-mode 1)
+    ; use C-g to go to normal mode
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+
+    ;; Use visual line motions even outside of visual-line-mode buffers
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+    (evil-set-initial-state 'messages-buffer-mode 'normal)
+    (evil-set-initial-state 'dashboard-mode 'normal))
+
+#+end_src
+
+** "jk" to normal
+
+#+begin_src emacs-lisp
+
+  ;; key-chord: allow press two key quickly to get a command
+  (use-package key-chord
+    :ensure t
+    :config
+    (key-chord-mode 1))
+
+  ;; set delay
+  (setq key-chord-tow-keys-delay 0.5)
+
+  ;;  'jk' to normal mode
+  (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
+  
+#+end_src
+
+** evil-collection
+
+disable evil in some mode
+
+#+begin_src emacs-lisp
+
+  ;; disable evil and use emacs keybindings in some mode
+  (use-package evil-collection
+    :after evil
+    :config
+    (evil-collection-init))
+
+#+end_src
+
+* Dev
+
+** commands
+
+*** Basic Completions
+
+- *completion-at-point* for completions
+
+*** Find Definitions and References
+
+C-c l g r / M-x lsp-findreferences : find the references in different file
+
+C-c l g g / M-x lsp-find-definition : find the definition
+
+*** Rename Symbol
+
+C-c l r r / M-x lsp-rename : rename the variable
+
+*** Diagnostics
+
+M-x flymake-show-diagnostics-buffer : show diagnostics
+
+*** Formatting
+
+M-x lsp-format-buffer / C-c l = = : format the buffer
+
+*** Find References
+
+M-x lsp-ui-peek-find references / C-c l G r : quick show the references in different files
+
+
+** flycheck
+
+#+begin_src emacs-lisp
+
+  (use-package flycheck
+    :ensure t
+    :config
+    (setq truncate-lines nil) ; 如果单行信息很长会自动换行
+    :hook
+    (prog-mode . flycheck-mode))
+
+#+end_src
+
+** IDE Features with lsp-mode
+
+*** lsp-mode
+
+C-c l in a lsp-mode buffer as a prefix
+
+#+begin_src emacs-lisp
+
+  ;; giving a hierarchy in a file
+  (defun efs/lsp-mode-setup ()
+    (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+    (lsp-headerline-breadcrumb-mode))
+
+  ;; lsp mode
+  (use-package lsp-mode
+    :ensure t
+    :commands (lsp lsp-deferred)
+    :hook (lsp-mode . efs/lsp-mode-setup)
+    :init
+    (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+    :config
+    (lsp-enable-which-key-integration t))
+
+#+end_src
+
+*** lsp-ui
+
+press M-x ui-doc-focus-frame to move around the doc
+
+#+begin_src emacs-lisp
+
+  (use-package lsp-ui
+    :hook (lsp-mode . lsp-ui-mode)
+    :config
+    (setq lsp-ui-flycheck-enable t)
+    :custom
+    (lsp-ui-doc-position 'bottom))
+
+#+end_src
+
+*** lsp-treemacs
+
+M-x lsp-treemacs-symbols : Show a tree view of the symbols in the current file
+
+M-x lsp-treemacs-references : Show a tree view for the references of the symbol under the cursor
+
+M-x lsp-treemacs-error-list : Show a tree view for the diagnostic messages in the project
+
+#+begin_src emacs-lisp
+  
+  (use-package treemacs
+    :ensure t
+    :defer t
+    :config
+    (treemacs-tag-follow-mode)
+    :bind
+    (:map global-map
+          ("M-0"       . treemacs-select-window)
+          ("C-x t 1"   . treemacs-delete-other-windows)
+          ("C-x t t"   . treemacs)
+          ("C-x t B"   . treemacs-bookmark)
+          ;; ("C-x t C-t" . treemacs-find-file)
+          ("C-x t M-t" . treemacs-find-tag))
+    (:map treemacs-mode-map
+          ("/" . treemacs-advanced-helpful-hydra)))
+
+  (use-package treemacs-projectile
+    :ensure t
+    :after (treemacs projectile))
+
+  (use-package lsp-treemacs
+    :ensure t
+    :after (treemacs lsp))
+
+#+end_src
+
+
+*** lsp-ivy
+
+easy to search for things by name
+
+M-x lsp-ivy-workspace-symbol : Search for a symbol name in the current project workspace
+
+M-x lsp-ivy-global-workspace-symbol : Search for a symbol name in all active project workspaces
+
+#+begin_src emacs-lisp
+
+  (use-package lsp-ivy)
+
+#+end_src
+
+
+** Debug with Dap Mode
+
+M-x dap-ui-breakpoint : breakpoint window, press q to exit
+
+M-x dap-ui-locals : locals window, press q to exit
+
+#+begin_src emacs-lisp
+
+  (use-package dap-mode
+    ;; Uncomment the config below if you want all UI panes to be hidden by default!
+    :custom
+    (lsp-enable-dap-auto-configure nil)
+    :config
+    (dap-ui-mode 1)
+
+    :config
+    ;; Set up Node debugging
+    (require 'dap-node)
+    (dap-node-setup) ;; Automatically installs Node debug adapter if needed
+
+    ;; Bind `C-c l d` to `dap-hydra` for easy access
+    (general-define-key
+      :keymaps 'lsp-mode-map
+      :prefix lsp-keymap-prefix
+      "d" '(dap-hydra t :wk "debugger")))
+
+#+end_src
+
+** Languages
+
+*** C/C++
+
+#+begin_src emacs-lisp
+
+  (defun file-name-only ()
+    "Get the current buffer file name without directory."
+    (file-name-nondirectory (buffer-name)))
+
+  (defun file-name-only-noext ()
+    "Get the currennt buffer file name without directory and extension."
+    (file-name-sans-extension (file-name-only)))
+
+  ;; set compile command
+  ;; if want to change, "M-x add-dir-local-variable" add edit dir-locals.el
+  ;;(c++-mode . ((compile-command . (concat "g++ -g "
+  ;;                                        (file-name-only)
+  ;;                                         " -o "
+  ;;                                        (file-name-only-noext)))))
+
+  (use-package cc-mode
+    :ensure nil
+    :functions 			; suppress warnings
+    c-toggle-hungry-state
+    :hook
+    (c-mode . lsp-deferred)
+    (c++-mode . lsp-deferred)
+    (c++-mode . c-toggle-hungry-state))
+
+#+end_src
+
+
+*** TypeScript
+
+A basic configuration for the TypeScript language so that *.ts* files activate *typescript-mode* when opened. And we also adding a hook to  *typescript-mode-hook* to call *lsp-deffered* so that we active *lsp-mode* to get LSP features every time we edit TypeScript code
+
+*note*: run *npm install -g typescript-language-server typescript*
+
+still some bug in dap mode typescript, because I'm not sure how to find the compiled javascript file
+
+#+begin_src emacs-lisp
+  
+  (use-package typescript-mode
+    :mode "\\.ts\\'"
+    :hook (typescript-mode . lsp-deferred)
+    :config
+    (setq typescript-indent-level 2))
+
+#+end_src
+
+*** python
+
+**** basic configure
+
+#+begin_src emacs-lisp
+
+  (use-package python
+    :defer t
+    :mode ("\\.py\\'" . python-mode)
+    :interpreter ("python3" . python-mode)
+    :custom
+    (dap-python-debugger 'debugpy)
+    :config
+    (require 'dap-python)
+    (setq dap-python-default-debugger 'debugpy))
+
+;  (use-package pyvenv
+;    :ensure t
+;    :config
+;    (setenv "WORKON_HOME" (expand-file-name "d:/dev/anaconda/envs"))
+    ;; (setq python-shell-interpreter "python3")  ; （可选）更改解释器名字
+;    (pyvenv-mode t)
+    ;; （可选）如果希望启动后激活 anaconda 的 base 环境，就使用如下的 hook
+                                          ;:hook
+                                          ;(python-mode . (lambda () (pyvenv-workon "..")))
+;    )
+  
+;  (defun my-pyvenv-workon-hook ()
+;    "Restart lsp and update Flycheck when switching Python virtual environments."
+    ;; Restart lsp-mode
+;    (when (bound-and-true-p lsp-mode)
+;      (lsp-restart-workspace))
+
+    ;; Update Flycheck executables
+;    (setq-local flycheck-python-pycompile-executable (executable-find "python"))
+;    (setq-local flycheck-python-pyright-executable (executable-find "pyright"))
+;    (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
+;    (setq-local flycheck-python-pylint-executable (executable-find "pylint"))
+
+    ;; Restart Flycheck to use the new executables
+;    (flycheck-buffer))
+
+;  (add-hook 'pyvenv-post-activate-hooks 'my-pyvenv-workon-hook)
+
+#+end_src
+
+**** lsp configure
+
+run command: *npm install -g pyright* to install pyright
+
+
+#+begin_src emacs-lisp
+
+   (use-package lsp-pyright
+     :ensure t
+     :config
+     :hook
+     (python-mode . (lambda ()
+                     (require 'lsp-pyright)
+                     (lsp-deferred))))
+
+
+  ;; (use-package
+  ;;   lsp-jedi
+  ;;   :ensure t
+  ;;   :config
+  ;;   :hook
+  ;;   (python-mode . (lambda ()
+  ;;                    (require 'lsp-jedi)
+  ;;                    (lsp-deferred))))
+
+#+end_src
+
+** Commenting
+
+use C-/ to comment the lines
+
+#+begin_src emacs-lisp
+
+  (use-package evil-nerd-commenter
+    :bind ("C-/" . evilnc-comment-or-uncomment-lines))
+
+#+end_src
+
+** Company Mode
+
+nicer in-buffer completion interface than completion-at-point
+
+bind <tab> to complete
+
+use company-box to further enhance the look of the completions with icons and better overall presentation
+
+#+begin_src emacs-lisp
+
+  (use-package company
+    :ensure t
+    :after lsp-mode
+    :hook (lsp-mode . company-mode)
+    :bind (:map company-active-map
+           ("<tab>" . company-complete-selection))
+    (:map lsp-mode-map
+           ("<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.0)
+    (company-show-numbers t) ; M-1, M-2 ... to select the card
+    (company-selection-wrap-around t)
+    (company-transformers '(company-sort-by-occurrence))) ; frequency sort
+
+
+  (use-package company-box
+    :ensure t
+    :if window-system
+    :hook (company-mode . company-box-mode))
+
+#+end_src
+
+** Yasnippet (codes shortcuts)
+#+begin_src emacs-lisp
+
+;(use-package yasnippet
+;  :ensure t)
+;(yas-global-mode 1)
+;(add-hook 'yas-minor-mode-hook (lambda () (yas-activate-extra-mode 'fundamental-mode)))
+
+;(use-package yasnippet-snippets
+;    :ensure t
+;    :after yasnippet)
+    
+#+end_src>
+
+** rainbow bracket
+
+#+begin_src emacs-lisp
+
+  ;; rainbow bracket
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+
+#+end_src
+
+** projectile
+
+check a dir with .git as a project in the specific path
+
+#+begin_src emacs-lisp
+
+  ;; projectile
+  (use-package projectile
+    :diminish projectile-mode
+    :config (projectile-mode)
+    ;; make profectile command bind to ivy
+    :custom ((projectile-completion-system 'ivy))
+    ;; C-c p to use projectile command
+    :bind-keymap
+    ("C-c p" . projectile-command-map)
+    :init
+    
+    ;; NOTE: Set this to the folder where you keep your Git repos!
+    ;; in my case: d:/codes/projects
+    
+    (when (file-directory-p "~/projects")
+      (setq projectile-project-search-path '("~/projects")))
+    (setq projectile-switch-project-action #'projectile-dired))
+
+#+end_src
+
+** magit
+
+#+begin_src emacs-lisp
+
+  ;; magit
+  ;; set the git path, or emacs can not find git
+
+  (use-package magit
+    :custom
+    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+  ;; evil-magit has merged into magit, we don't need it anymore!
+
+  ;(use-package evil-magit
+    ;:after magit)
+
+#+end_src
+
+** force
+
+A package to deal with github, I think i don't need it for a while
+
+#+begin_src emacs-lisp
+
+  ;; I think I don't need it for while
+  ;; for future using, use it to manage github related things
+
+  ;; NOTE: Make sure to configure a GitHub token before using this package!
+  ;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
+  ;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
+  ;(use-package forge)
+
+#+end_src
+
+* Terminals
+
+** term-mode
+
+- =C-c C-p= / =C-c C-n= : go back and forward in the buffer's prompts(also "[[" and  back parenthesis in evil mode)
+- =C-c C-k= : Enter char-mode
+- =C-c C-j= : Return to line-mode
+
+  to open multiple term, use =rename-uniquely= to rename the term buffer
+
+#+begin_src emacs-lisp
+
+  (use-package term
+    :config
+    (setq explicit-shell-file-name "bash") ;; Change this to zsh, etc
+    ;;(setq explicit-zsh-args '())         ;; Use 'explicit-<shell>-args for shell-specific args
+
+    ;; Match the default Bash shell prompt.  Update this if you have a custom prompt
+    (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *"))
+  
+#+end_src
+
+** Better term-mode colors
+
+#+begin_src emacs-lisp
+
+(use-package eterm-256color
+  :hook (term-mode . eterm-256color-mode))
+
+#+end_src
+
+** ansi term
+
+M-x ansi-term : multi teminal
+
+** vterm
+
+faster term (use local compiler not elisp)
+
+#+begin_src emacs-lisp
+(use-package vterm
+  :commands vterm
+  :config
+  (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")  ;; Set this to match your custom shell prompt
+  ;;(setq vterm-shell "zsh")                       ;; Set this to customize the shell to launch
+  (setq vterm-max-scrollback 10000))
+#+end_src
+
+** eshell
+
+redirect the output into a buffer:  =echo "hello!" > #<buffer test-buffer>=
+
+#+begin_src emacs-lisp
+(defun efs/configure-eshell ()
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+
+  ;; Truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+
+  ;; Bind some useful keys for evil-mode
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps)
+
+  (setq eshell-history-size         10000
+        eshell-buffer-maximum-lines 10000
+        eshell-hist-ignoredups t
+        eshell-scroll-to-bottom-on-input t))
+
+(use-package eshell-git-prompt)
+
+(use-package eshell
+  :hook (eshell-first-time-mode . efs/configure-eshell)
+  :config
+
+  (with-eval-after-load 'esh-opt
+    (setq eshell-destroy-buffer-when-process-dies t)
+    (setq eshell-visual-commands '("htop" "zsh" "vim")))
+
+  (eshell-git-prompt-use-theme 'powerline))
+#+end_src
+
+* File Management
+** Dired
+
+Dired is a built-in file manager for Emacs that does some pretty amazing things! Here are some key bindings you should try out:
+
+*** Key Bindings
+**** Navigation
+***** Emacs / Evil
+
+        - n / j - next line
+        - p / k - previous line
+        - j / J - jump to file in buffer
+        - RET - select file or directory
+        - ^ - go to parent directory
+        - S-RET / g O - Open file in “other” window
+        - M-RET - Show file in other window without focusing (previewing files)
+        - g o (dired-view-file) - Open file but in a “preview” mode, close with q
+        - g / g r Refresh the buffer with revert-buffer after changing configuration (and after filesystem changes!)
+
+**** Marking files
+        - m - Marks a file
+        - u - Unmarks a file
+        - U - Unmarks all files in buffer
+        - * t / t - Inverts marked files in buffer
+        % m - Mark files in buffer using regular expression
+        - * - Lots of other auto-marking functions
+        - k / K - “Kill” marked items (refresh buffer with g / g r to get them back)
+        Many operations can be done on a single file if there are no active marks!
+
+**** Copying and Renaming files
+- C-x C-q : use evil normal mode to edit the name and press *Z-Z*
+- C - Copy marked files (or if no files are marked, the current file)
+  Copying single and multiple files
+- U - Unmark all files in buffer
+- R - Rename marked files, renaming multiple is a move!
+- % R - Rename based on regular expression: ^test , old-\&
+- Power command: C-x C-q (dired-toggle-read-only) - Makes all file names in the buffer editable directly to rename them! Press Z Z to confirm renaming or Z Q to abort.
+
+**** Deleting files
+- D - Delete marked file
+- d - Mark file for deletion
+- x - Execute deletion for marks
+- delete-by-moving-to-trash - Move to trash instead of deleting permanently
+**** Creating and extracting archives
+- Z - Compress or uncompress a file or folder to (.tar.gz)
+- c - Compress selection to a specific file
+- dired-compress-files-alist - Bind compression commands to file extension
+**** Other common operations
+- T - Touch (change timestamp)
+- M - Change file mode
+- O - Change file owner
+- G - Change file group
+- S - Create a symbolic link to this file
+- L - Load an Emacs Lisp file into Emacs
+
+#+begin_src emacs-lisp
+
+  (use-package dired
+    :ensure nil
+    :commands (dired dired-jump)
+    :bind (("C-x C-j" . dired-jump))
+    :custom ((dired-listing-switches "-agho --group-directories-first"))
+    :config
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "h" 'dired-single-up-directory
+      "l" 'dired-single-buffer))
+
+  (use-package dired-single)
+
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode))
+
+  (use-package dired-open
+    :config
+    ;; Doesn't work as expected!
+    ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
+    (setq dired-open-extensions '(("png" . "feh")
+                                  ("mkv" . "mpv"))))
+
+  ;; "H" to load dot files
+  (use-package dired-hide-dotfiles
+    :hook (dired-mode . dired-hide-dotfiles-mode)
+    :config
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "H" 'dired-hide-dotfiles-mode))
+
+#+end_src
+* Keep Folders Clean
+
+** back up files
+
+keep those file in =~/.emacs.c/tmp/backups=
+
+#+begin_src emacs-lisp
+  
+  (setq backup-directory-alist `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
+
+#+end_src
+
+** auto-save files
+
+put those files into =~/.emacs.d/tmp/auto-saves/=
+
+#+begin_src emacs-lisp
+
+  ;; auto-save-mode doesn't create the path automatically!
+  (make-directory (expand-file-name "tmp/auto-saves/" user-emacs-directory) t)
+
+  (setq auto-save-list-file-prefix (expand-file-name "tmp/auto-saves/sessions/" user-emacs-directory)
+        auto-save-file-name-transforms `((".*" ,(expand-file-name "tmp/auto-saves/" user-emacs-directory) t)))
+
+#+end_src
+
+
+* Window Management
+
+** Ace-window
+
+fast moving to different windows
+
+set aw-keys to home keys , you don't need to get out of the home line
+
+
+#+begin_src emacs-lisp
+  (use-package ace-window
+    :ensure t
+    :config
+    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+    :bind (("C-x o" . 'ace-window)))
+#+end_src
+
+** Edwina
+
+*** setup
+
+Offer an automatically window management for master window and stack window
+
+#+begin_src emacs-lisp
+
+  ;; (use-package edwina
+  ;;   :ensure t
+  ;;   :config
+  ;;   (setq display-buffer-base-action '(display-buffer-below-selected))
+  ;;   ;; (edwina-setup-dwm-keys)
+  ;;   (edwina-mode 1))
+
+#+end_src
+
+*** Keybindings
+
+By default these keys are prefixed with =C-c C-w=. Customize =edwina-keymap-prefix= to change the prefix.
+
+|-------------------+--------------------------------------|
+| Binding           | Action                               |
+|-------------------+--------------------------------------|
+| =r=, =C-r=        | Arrange windows                      |
+| =n=, =C-n=, =SPC= | Move to next window                  |
+| =p=, =C-p=        | Move to previous window              |
+| =N=, =C-S-n=      | Swap places with the next window     |
+| =P=, =C-S-p=      | Swap places with the previous window |
+| =%=, ={=, =[=     | Decrease the size of the master area |
+| =^=, =}=, =]=     | Increase the size of the master area |
+| =d=, =C-d=        | Decrease number of windows in master |
+| =i=               | Increase number of windows in master |
+| =k=, =C-k=        | Delete window                        |
+| =RET=             | Cycle window to/from master area     |
+| =c=, =C-c=        | Clone current window                 |
+|-------------------+--------------------------------------|
+|                   |                                      |
+
+** Winner mode
+
+window manage undo and redo
+
+bind =C-w u= and =C-w U= to undo and redo
+
+ =C-c left= =C-c right= to undo redo 
+
+#+begin_src emacs-lisp
+
+(use-package winner-mode
+  :ensure nil
+  :bind (:map evil-window-map
+         ("u" . winner-undo)
+         ("U" . winner-redo))
+  :config
+  (winner-mode))
+
+#+end_src
+
+* Org Mode
+
+** font set up
+
+
+#+begin_src emacs-lisp
+  (defun efs/org-font-setup ()
+    ;; Replace list hyphen with dot
+    (font-lock-add-keywords 'org-mode
+                            '(("^ *\\([-]\\) "
+                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+    ;; Set faces for heading levels
+    (dolist (face '((org-level-1 . 1.2)
+                    (org-level-2 . 1.1)
+                    (org-level-3 . 1.05)
+                    (org-level-4 . 1.0)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :font "LXGW WenKai" :weight 'regular :height (cdr face)))
+
+    ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+    (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+    (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+    (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch))
+
+#+end_src
+
+** Basic Set up
+
+
+#+begin_src emacs-lisp
+
+  (defun efs/org-mode-setup ()
+    (org-indent-mode)
+    (variable-pitch-mode 1)
+    (visual-line-mode 1))
+
+#+end_src
+
+** Org UI and Agenda
+
+
+#+begin_src emacs-lisp
+
+  (use-package org
+    :hook (org-mode . efs/org-mode-setup)
+    :config
+    (setq org-ellipsis " ▾")
+    (efs/org-font-setup)
+
+    (setq org-agenda-start-with-log-mode t)
+    (setq org-log-done 'time)
+    (setq org-log-into-drawer t)
+
+    ;; set org agenda path
+    (setq org-directory "~/.emacs.d/utilFiles/orgFiles")
+    (setq org-agenda-files '("tasks.org" "habits.org" ))
+
+    (require 'org-habit)
+    (add-to-list 'org-modules 'org-habit)
+    (setq org-habit-graph-column 60)
+
+    (setq org-todo-keywords
+      '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+        (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVE(a)" "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)" "|" "COMPLETED(c)" "CANC(k@)")))
+
+    (setq org-refile-targets
+      '(("archive.org" :maxlevel . 1)
+        ("tasks.org" :maxlevel . 1)))
+
+    ;; Save Org buffers after refiling!
+    (advice-add 'org-refile :after 'org-save-all-org-buffers)
+
+    (setq org-tag-alist
+      '((:startgroup)
+         ; Put mutually exclusive tags here
+         (:endgroup)
+         ("@errand" . ?E)
+         ("@home" . ?H)
+         ("@work" . ?W)
+         ("agenda" . ?a)
+         ("planning" . ?p)
+         ("publish" . ?P)
+         ("batch" . ?b)
+         ("note" . ?n)
+         ("idea" . ?i)))
+
+    ;; Configure custom agenda views
+    (setq org-agenda-custom-commands
+     '(("d" "Dashboard"
+       ((agenda "" ((org-deadline-warning-days 7)))
+        (todo "NEXT"
+          ((org-agenda-overriding-header "Next Tasks")))
+        (tags-todo "agenda/ACTIVE" ((org-agenda-overriding-header "Active Projects")))))
+
+      ("n" "Next Tasks"
+       ((todo "NEXT"
+          ((org-agenda-overriding-header "Next Tasks")))))
+
+      ("W" "Work Tasks" tags-todo "+work")
+
+      ;; Low-effort next actions
+      ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
+       ((org-agenda-overriding-header "Low Effort Tasks")
+        (org-agenda-max-todos 20)
+        (org-agenda-files org-agenda-files)))
+
+      ("w" "Workflow Status"
+       ((todo "WAIT"
+              ((org-agenda-overriding-header "Waiting on External")
+               (org-agenda-files org-agenda-files)))
+        (todo "REVIEW"
+              ((org-agenda-overriding-header "In Review")
+               (org-agenda-files org-agenda-files)))
+        (todo "PLAN"
+              ((org-agenda-overriding-header "In Planning")
+               (org-agenda-todo-list-sublevels nil)
+               (org-agenda-files org-agenda-files)))
+        (todo "BACKLOG"
+              ((org-agenda-overriding-header "Project Backlog")
+               (org-agenda-todo-list-sublevels nil)
+               (org-agenda-files org-agenda-files)))
+        (todo "READY"
+              ((org-agenda-overriding-header "Ready for Work")
+               (org-agenda-files org-agenda-files)))
+        (todo "ACTIVE"
+              ((org-agenda-overriding-header "Active Projects")
+               (org-agenda-files org-agenda-files)))
+        (todo "COMPLETED"
+              ((org-agenda-overriding-header "Completed Projects")
+               (org-agenda-files org-agenda-files)))
+        (todo "CANC"
+              ((org-agenda-overriding-header "Cancelled Projects")
+               (org-agenda-files org-agenda-files)))))))
+
+    (setq org-capture-templates
+      `(("t" "Tasks / Projects")
+        ("tt" "Task" entry (file+olp "~/.emacs.d/utilFiles/orgFiles/tasks.org" "Inbox")
+             "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+
+        ("j" "Journal Entries")
+        ("jj" "Journal" entry
+             (file+olp+datetree "~/.emacs.d/utilFiles/orgFiles/journal.org")
+             "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+             ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
+             :clock-in :clock-resume
+             :empty-lines 1)
+        ("jm" "Meeting" entry
+             (file+olp+datetree "~/.emacs.d/utilFiles/orgFiles/journal.org")
+             "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
+             :clock-in :clock-resume
+             :empty-lines 1)
+
+        ("w" "Workflows")
+        ("we" "Checking Email" entry (file+olp+datetree "~/.emacs.d/utilFiles/orgFiles/journal.org")
+             "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
+
+        ("m" "Metrics Capture")
+        ("mw" "Weight" table-line (file+headline "~/.emacs.d/utilFiles/orgFiles/metrics.org" "Weight")
+         "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
+
+    (define-key global-map (kbd "C-c j")
+      (lambda () (interactive) (org-capture nil "jj")))
+    )
+
+#+end_src
+
+** Org Babel Util
+
+*** Structure Templates
+
+#+begin_src emacs-lisp
+
+  (require 'org-tempo)
+
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+
+#+end_src
+
+*** Setting Up the Config
+
+Apply the same configuration to every block:
+
+#+PROPERTY header-args:emacs-lisp :tangle ./init-new.el
+
+*** Set Languages
+
+#+begin_src emacs-lisp
+
+  (org-babel-do-load-languages
+  'org-babel-load-languages
+  '((emacs-lisp . t)
+      (python . t)))
+
+  ;; don't ask me if i want to execute
+  (setq org-confirm-babel-evaluate nil)
+
+#+end_src
+
+
+** Auto-tangle Configuration Files
+
+efs/org-babel-tangle-config gets executed each time such a buffer gets saved. This function checks to see if the file being saved is the init.org file. And if so, automatically exports the configuration to the associated output files
+
+#+begin_src emacs-lisp
+  
+    ;; Automatically tangle our init.org config file when we save it
+  (defun efs/org-babel-tangle-config ()
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/.emacs.d/utilFiles/initFiles/init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (org-babel-tangle))))
+
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+
+#+end_src
+
+
+** Org Bullets
+
+#+begin_src emacs-lisp
+
+  (use-package org-bullets
+    :after org
+    :hook (org-mode . org-bullets-mode)
+    :custom
+    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+#+end_src
+
+** Fill Column and Centering Text
+
+#+begin_src emacs-lisp
+
+  (defun efs/org-mode-visual-fill ()
+    (setq visual-fill-column-width 100
+          visual-fill-column-center-text t)
+    (visual-fill-column-mode 1))
+
+  (use-package visual-fill-column
+    :hook (org-mode . efs/org-mode-visual-fill))
+
+#+end_src
+
+
+
+** Org Export 
+*** org to pdf
+
+The following line will remove the default packages and use our packages.
+
+add this line in your org file, press =C-c C-e= to export
+
+for all english:
+
+; #+title: org to pdf test
+; #+author: HappyTech
+; #+SETUPFILE: ~/.emacs.d/utilFiles/orgExport/basic_latex_export.org
+
+for chinese:
+
+; #+title: org to pdf test
+; #+author: HappyTech
+; #+SETUPFILE: ~/.emacs.d/utilFiles/orgExport/chinese_latex_export.org
+
+
+
+#+begin_src emacs-lisp
+;; (with-eval-after-load 'ox-latex)
+(add-to-list 'org-latex-classes
+             '("org-plain-latex"
+               "\\documentclass{article}
+           [NO-DEFAULT-PACKAGES]
+           [PACKAGES]
+           [EXTRA]"
+               ("\\section{%s}" . "\\section*{%s}")
+               ("\\subsection{%s}" . "\\subsection*{%s}")
+               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+               ("\\paragraph{%s}" . "\\paragraph*{%s}")
+               ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+#+end_src>

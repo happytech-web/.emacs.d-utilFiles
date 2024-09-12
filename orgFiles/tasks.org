@@ -1,0 +1,30 @@
+
+* Active
+
+** DONE Finish org init
+CLOSED: [2024-08-12 周一 22:21] SCHEDULED: <2024-08-12 周一>
+
+** TODO learn org mode
+DEADLINE: <2024-08-13 周二>
+
+* Backlog
+
+* util commands
+
+S-<left> / S-<right> : change the state
+
+C-c C-s / M-x org-schedule : add schecule
+
+C-c C-d / M-x org-deadline : add deadline
+
+M-x org-agenda : list agenda commands
+
+M-x counsel-org-tag : put tag on todo
+
+C-c C-q : put tag on todo, but easier
+
+M-x org-set-property / C-c C-x p : set property of a task
+
+C-c C-w / M-x org-refile : move lines to another file
+
+M-x org-capture : add small tasks globally

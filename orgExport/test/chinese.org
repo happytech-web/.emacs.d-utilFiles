@@ -1,0 +1,15 @@
+#+title: 中文测试
+#+author: HappyTech
+#+SETUPFILE: ~/.emacs.d/utilFiles/orgExport/chinese_latex_export.org
+
+* 我来看看怎么个事
+
+** 子标题
+
+*** 再来个
+
+随便写点啥
+
+* 再来
+
+啦啦啦
